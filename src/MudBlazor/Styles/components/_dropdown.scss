@@ -1,0 +1,33 @@
+﻿.mud-dropdown {
+    display: flex;
+    flex-grow: 1;
+    position: relative;
+
+    .mud-dropdown-input {
+        cursor: pointer;
+
+        & .mud-input-slot {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        & .mud-input-adornment-end {
+            margin-left: 0;
+        }
+
+        &:disabled {
+            cursor: default;
+        }
+    }
+
+    .mud-disabled {
+        .mud-select-input {
+            cursor: default;
+        }
+    }
+}
+
+.mud-dropdown > .mud-form-helpertext {
+    margin-top: -21px;
+}

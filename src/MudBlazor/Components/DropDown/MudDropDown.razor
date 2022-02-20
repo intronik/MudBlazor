@@ -1,0 +1,73 @@
+﻿@namespace MudBlazor
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@typeparam T
+@inherits MudBaseInput<T>
+<CascadingValue Name="Standalone" Value="false" IsFixed="true">
+    <div class="mud-dropdown" id="@_elementId">
+        <MudInputControl Label="@Label" Variant="@Variant" HelperText="@HelperText" HelperTextOnFocus="@HelperTextOnFocus" FullWidth="@FullWidth" Margin="@Margin" Class="@Classname" Style="@Style"
+                         Error="@Error" ErrorText="@ErrorText" Disabled="@Disabled" @onclick="@ToggleMenu" Required="@Required">
+            <InputContent>
+                <MudInput @ref="_elementReference" InputType="@(CanRenderValue || (Strict && !IsValueInList) ? InputType.Hidden : InputType.Text)"
+                          Class="mud-dropdown-input" Margin="@Margin" Placeholder="@Placeholder"
+                          Variant="@Variant"
+                          TextUpdateSuppression="false"
+                          Value="@(Strict && !IsValueInList ? null : Text)" DisableUnderLine="@DisableUnderLine"
+                          Disabled="@Disabled" ReadOnly="true" Error="@Error"
+                          OnAdornmentClick="@OnAdornmentClick" AdornmentIcon="@CurrentIcon" Adornment="@Adornment"
+                          AdornmentColor="@AdornmentColor" IconSize="@IconSize" AdornmentText="@AdornmentText"
+                          Clearable="@Clearable" OnClearButtonClick="(async (e) => await SelectClearButtonClickHandlerAsync(e))"
+                          @attributes="UserAttributes" OnBlur="@OnLostFocus">
+                    @if (ChildContent != null && Value != null)
+                    {
+                        @ChildContent(Value)
+                    }
+                </MudInput>
+                <MudPopover Open=@(_isOpen) MaxHeight="@MaxHeight" AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Class="@PopoverClass" RelativeWidth="true">
+                    @if (Items != null)
+                    {
+                        <MudList id="@_listId" Clickable="true" Dense="@Dense" @bind-SelectedValue="_activeItemId">
+                            @if (MultiSelection && SelectAll)
+                            {
+                                <MudListItem Icon="@SelectAllCheckBoxIcon" Text="@SelectAllText" OnClick="SelectAllClickAsync" Dense="@Dense" Class="mb-2" />
+                                <MudDivider />
+                            }
+                            @if (UseVirtualization)
+                            {
+                                <Virtualize ItemsProvider=@LoadItems Context="itemIndex">
+                                    <MudListItem id="@GetIdForIndex(itemIndex.Index)" OnClick=@(_=>SelectOption(itemIndex.Item, itemIndex.Index)) Icon=@CheckBoxIcon(itemIndex.Item) Dense="@Dense" Value=@itemIndex.Index>
+                                        @if (ChildContent != null)
+                                        {
+                                            @ChildContent(itemIndex.Item)
+                                        }
+                                        else
+                                        {
+                                            @itemIndex.Item
+                                        }
+                                    </MudListItem>
+                                </Virtualize>
+                            }
+                            else
+                            {
+                                foreach (var (item, index) in Items.Select((item, index) => (item, index)))
+                                {
+                                    <MudListItem id="@GetIdForIndex(index)" Icon=@CheckBoxIcon(item) Value=@index Dense="@Dense" OnClick=@(_=>SelectOption(item, index))>
+                                        @if (ChildContent != null)
+                                        {
+                                            @ChildContent(item)
+                                        }
+                                        else
+                                        {
+                                            @item
+                                        }
+                                    </MudListItem>
+                                }
+                            }
+                        </MudList>
+                    }
+                </MudPopover>
+            </InputContent>
+        </MudInputControl>
+    </div>
+</CascadingValue>
+<!-- mousedown instead of click needed to close the menu before OnLostFocus runs -->
+<MudOverlay Visible="_isOpen" @onmousedown="@(() => CloseMenu(false))" @ontouchstart="@(() => CloseMenu(false))" LockScroll="@LockScroll" />

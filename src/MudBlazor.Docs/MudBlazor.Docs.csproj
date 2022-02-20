@@ -127,6 +127,22 @@
     <Content Remove="excubowebcompiler.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Pages\Components\DropDown\Code\MultiSelectCustomizedExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\MultiSelectExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\MultiSelectSelectAllExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectAdvancedPopoverExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectCustomConverterExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectDenseExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectKeyboardNavigationExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectManyExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectMarginExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectNumericCollectionExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectPresentationExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectPropsExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectUsageExampleCode.html" />
+    <None Remove="Pages\Components\DropDown\Code\SelectVariantsExampleCode.html" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="wwwroot\images\landingpage" />
   </ItemGroup>
 
