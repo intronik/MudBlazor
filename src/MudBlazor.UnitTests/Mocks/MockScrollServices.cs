@@ -38,6 +38,8 @@ namespace MudBlazor.UnitTests.Mocks
 
         public ValueTask ScrollToListItemAsync(string elementId) => ValueTask.CompletedTask;
 
+        public ValueTask SetRelativeScrollTopAsync(string elementId, double relativeTop) => ValueTask.CompletedTask;
+
         public Task ScrollToTop(ScrollBehavior scrollBehavior = ScrollBehavior.Auto) => Task.CompletedTask;
         
         public ValueTask ScrollToTopAsync(string id, ScrollBehavior scrollBehavior = ScrollBehavior.Auto) => ValueTask.CompletedTask;

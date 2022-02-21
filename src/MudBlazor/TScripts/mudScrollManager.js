@@ -33,6 +33,17 @@ class MudScrollManager {
         }
     }
 
+    // sets the scrollTop position of a container in relation (0..1) of the possible scroll height
+    // useful for e.g. <Virtualize>
+    setRelativeScrollTop(elementId, relativeTop) {
+        if (relativeTop) {
+            let element = document.getElementById(elementId);
+            if (element) {
+                element.scrollTop = element.scrollHeight * relativeTop;
+            }
+        }
+    }
+
     //scrolls to the selected element. Default is documentElement (i.e., html element)
     scrollTo(selector, left, top, behavior) {
         let element = document.querySelector(selector) || document.documentElement;
