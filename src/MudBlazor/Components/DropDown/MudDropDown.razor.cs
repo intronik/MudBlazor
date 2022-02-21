@@ -145,7 +145,18 @@ namespace MudBlazor
         }
 
         private ValueTask ScrollToItemAsync(int index)
-            => index >= 0 ? ScrollManager.ScrollToListItemAsync(GetIdForIndex(index)) : ValueTask.CompletedTask;
+        {
+            if (UseVirtualization)
+            {
+                _cachedCount ??= Items?.Count() ?? 0;
+                var relativeTop = index >= 0 && _cachedCount.Value > 0 ? (double)index / (double)_cachedCount.Value : 0.0;
+                return ScrollManager.SetRelativeScrollTopAsync(_listId, relativeTop);
+            }
+            else
+            {
+                return index >= 0 ? ScrollManager.ScrollToListItemAsync(GetIdForIndex(index)) : ValueTask.CompletedTask;
+            }
+        }
 
         ValueTask SelectNextItem(int direction)
         {
@@ -158,6 +169,7 @@ namespace MudBlazor
             var newIndex = (10 * _cachedCount.Value + index + direction) % _cachedCount.Value;
             if (index == newIndex)
                 return ValueTask.CompletedTask;
+            _activeItemId = newIndex;
             return ScrollToItemAsync(newIndex);
         }
 
@@ -181,6 +193,7 @@ namespace MudBlazor
             {
                 _selectedValues.Add(item);
             }
+            _activeItemId = index;
             await _elementReference.SetText(Text);
             await ScrollToItemAsync(index);
         }
@@ -468,6 +481,8 @@ namespace MudBlazor
                 return;
             _isOpen = true;
             StateHasChanged();
+            // we need the popover to be visibible
+            await WaitForRender();
             // Scroll the active item on each opening
             var (item, index) = GetActiveItemAndIndex();
             await ScrollToItemAsync(index);

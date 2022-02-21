@@ -36,11 +36,12 @@ class MudScrollManager {
     // sets the scrollTop position of a container in relation (0..1) of the possible scroll height
     // useful for e.g. <Virtualize>
     setRelativeScrollTop(elementId, relativeTop) {
-        if (relativeTop) {
-            let element = document.getElementById(elementId);
-            if (element) {
-                element.scrollTop = element.scrollHeight * relativeTop;
-            }
+        console.log("setRelativeScrollTop(", elementId, "," ,relativeTop, ")")
+        let element = document.getElementById(elementId);
+        if (element) {
+            let top = element.scrollHeight * relativeTop;
+            console.log("setRelativeScrollTop(e= ", element, ", scrollHeight= ", element.scrollHeight, ", scrollTop= ", element.scrollTop, ", newTop= ", top, ")")
+            element.scrollTop = top;
         }
     }
 
