@@ -18,14 +18,24 @@ namespace MudBlazor
 {
     public partial class MudDropDown<T> : MudBaseInput<T>, IDisposable
     {
-        readonly string _elementId = $"_{Guid.NewGuid().ToString()[0..8]}";
-        readonly string _listId = $"_{Guid.NewGuid().ToString()[0..8]}";
+        readonly string _elementId = $"_{Guid.NewGuid().ToString()[0..10]}";
+        readonly string _listId = $"_{Guid.NewGuid().ToString()[0..10]}";
         private HashSet<T> _selectedValues = new();
         private IEqualityComparer<T> _comparer;
+        /// <summary>
+        /// always non null list of available items
+        /// </summary>
+        private IEnumerable<T> _items = Enumerable.Empty<T>();
+        /// <summary>
+        /// number of total items in the list
+        /// </summary>
+        private int _totalItems = 0;
+        /// <summary>
+        /// index of the currently selected item, -1 means the current value is not part of the list
+        /// </summary>
+        private int _selectedItemIndex = -1;
         private bool? _selectAllChecked;
-        private int? _cachedCount;
         private bool _isOpen;
-        private object _activeItemId;
         private string _multiSelectionText;
         private Func<T, string> _toStringFunc = x => x?.ToString();
         private MudInput<string> _elementReference;
@@ -38,13 +48,35 @@ namespace MudBlazor
         ;
         private ValueTask<ItemsProviderResult<(T Item, int Index)>> LoadItems(ItemsProviderRequest request)
         {
-            _cachedCount ??= Items.Count();
             var result = new ItemsProviderResult<(T Item, int Index)>(
-                  items: Items.Skip(request.StartIndex).Take(request.Count).Select((item, index) => (item, index + request.StartIndex))
-                , totalItemCount: _cachedCount.Value
+                  items: _items.Skip(request.StartIndex).Take(request.Count).Select((item, index) => (item, index + request.StartIndex))
+                , totalItemCount: _totalItems
             );
             return ValueTask.FromResult(result);
         }
+        /// <summary>
+        /// helper for linq Select to map an IEnumerable with an index
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        static (T Item, int Index) MapIndexed(T item, int index) => (item, index);
+        protected IEnumerable<(T Item, int Index)> IndexedItems => _items.Select(MapIndexed);
+        protected object ActiveItemId
+        {
+            get => _isOpen && _selectedItemIndex >= 0 && _selectedItemIndex<_totalItems ? _selectedItemIndex : null;
+            set
+            {
+                if (value is int index && index>=0 && index< _totalItems)
+                {
+                    _selectedItemIndex = index;
+                } else
+                {
+                    _selectedItemIndex = -1;
+                }
+            }
+        }
+
         protected string CheckBoxIcon(T item) => MultiSelection ? (_selectedValues.Contains(item) ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank) : null;
         protected string GetIdForIndex(int index) => $"{_elementId}_{index}";
         protected string CurrentIcon => !string.IsNullOrWhiteSpace(AdornmentIcon) ? AdornmentIcon : _isOpen ? CloseIcon : OpenIcon;
@@ -53,7 +85,7 @@ namespace MudBlazor
         /// Returns whether or not the Value can be found in items. If not, the Select will display it as a string.
         /// </summary>
         protected bool CanRenderValue => Value != null && ChildContent != null;
-        protected bool IsValueInList => Items != null && Items.Contains(Value, _comparer);
+        protected bool IsValueInList => _items.Contains(Value, _comparer);
 
         /// <summary>
         /// Clear the selection
@@ -101,6 +133,13 @@ namespace MudBlazor
             }
         }
 
+        protected override void OnParametersSet()
+        {
+            base.OnParametersSet();
+            _items = Items != null ? Items : Enumerable.Empty<T>();
+            _totalItems = _items.Count();
+        }
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
@@ -131,25 +170,20 @@ namespace MudBlazor
 
         private Task SelectFirstItem()
         {
-            if (Items == null || Items.Any() == false)
-                return Task.CompletedTask;
-            var lastItem = Items.FirstOrDefault();
-            return SelectItemAsync(lastItem, 0);
+            var item = IndexedItems.FirstOrDefault();
+            return SelectItemAsync(item.Item, item.Index);
         }
         private Task SelectFirstItem(string startChar)
         {
-            if (Items == null || Items.Any() == false)
-                return Task.CompletedTask;
-            var lastItem = Items.Select((Item, Index) => (Item, Index)).Where(i => Converter.Set(i.Item).ToLowerInvariant().StartsWith(startChar)).FirstOrDefault();
-            return SelectItemAsync(lastItem.Item, lastItem.Index);
+            var item = IndexedItems.Skip(Math.Max(0, _selectedItemIndex)).Where(i => Converter.Set(i.Item).ToLowerInvariant().StartsWith(startChar)).FirstOrDefault();
+            return SelectItemAsync(item.Item, item.Index);
         }
 
         private ValueTask ScrollToItemAsync(int index)
         {
             if (UseVirtualization)
             {
-                _cachedCount ??= Items?.Count() ?? 0;
-                var relativeTop = index >= 0 && _cachedCount.Value > 0 ? (double)index / (double)_cachedCount.Value : 0.0;
+                var relativeTop = index >= 0 && _totalItems > 0 ? (double)index / (double)_totalItems : 0.0;
                 return ScrollManager.SetRelativeScrollTopAsync(_listId, relativeTop);
             }
             else
@@ -160,26 +194,17 @@ namespace MudBlazor
 
         ValueTask SelectNextItem(int direction)
         {
-            if (direction == 0 || Items == null || Items.Any() == false)
+            if (direction == 0 || _totalItems<1)
                 return ValueTask.CompletedTask;
-            _cachedCount ??= Items.Count();
-            if (_cachedCount.Value < 1)
-                return ValueTask.CompletedTask;
-            var index = _activeItemId is int v ? v : 0;
-            var newIndex = (10 * _cachedCount.Value + index + direction) % _cachedCount.Value;
-            if (index == newIndex)
-                return ValueTask.CompletedTask;
-            _activeItemId = newIndex;
+            var newIndex = (10 * _totalItems + _selectedItemIndex + direction) % _totalItems;
+            ActiveItemId = newIndex;
             return ScrollToItemAsync(newIndex);
         }
 
         private Task SelectLastItem()
         {
-            if (Items == null || Items.Any() == false)
-                return Task.CompletedTask;
-            var lastItem = Items.LastOrDefault();
-            _cachedCount ??= Items.Count();
-            return SelectItemAsync(lastItem, _cachedCount.Value - 1);
+            var item = IndexedItems.LastOrDefault();
+            return SelectItemAsync(item.Item, item.Index);
         }
         private async Task SelectItemAsync(T item, int index)
         {
@@ -193,7 +218,7 @@ namespace MudBlazor
             {
                 _selectedValues.Add(item);
             }
-            _activeItemId = index;
+            ActiveItemId = index;
             await _elementReference.SetText(Text);
             await ScrollToItemAsync(index);
         }
@@ -271,7 +296,6 @@ namespace MudBlazor
                     break;
                 case "Enter":
                 case "NumpadEnter":
-                    var (item, index) = GetActiveItemAndIndex();
                     if (!MultiSelection)
                     {
                         if (!_isOpen)
@@ -280,7 +304,7 @@ namespace MudBlazor
                             return;
                         }
                         // this also closes the menu
-                        await SelectOption(item, index);
+                        await SelectOption(_selectedItemIndex);
                         break;
                     }
                     else
@@ -292,7 +316,7 @@ namespace MudBlazor
                         }
                         else
                         {
-                            await SelectOption(item, index);
+                            await SelectOption(_selectedItemIndex);
                             await _elementReference.SetText(Text);
                             break;
                         }
@@ -359,12 +383,11 @@ namespace MudBlazor
         {
             if (MultiSelection && SelectAll)
             {
-                _cachedCount ??= Items?.Count() ?? 0;
                 if (_selectedValues.Count == 0)
                 {
                     _selectAllChecked = false;
                 }
-                else if (_cachedCount.Value == _selectedValues.Count)
+                else if (_totalItems == _selectedValues.Count)
                 {
                     _selectAllChecked = true;
                 }
@@ -398,7 +421,7 @@ namespace MudBlazor
         {
             if (!MultiSelection)
                 return;
-            var selectedValues = Items != null ? new HashSet<T>(Items, _comparer) : new HashSet<T>(_comparer);
+            var selectedValues = new HashSet<T>(_items, _comparer);
             _selectedValues = selectedValues;
             if (MultiSelectionTextFunc != null)
             {
@@ -455,25 +478,11 @@ namespace MudBlazor
 
         protected T GetItemFromIndex(int index)
         {
-            if (Items == null)
+            if (index < 0 || index >= _totalItems)
                 return default;
-            if (index >= 0 && Items is IReadOnlyList<T> list && index < list.Count)
+            if (_items is IReadOnlyList<T> list)
                 return list[index];
-            return Items.Skip(index).FirstOrDefault();
-        }
-        /// <summary>
-        /// Returns the active item value and index
-        /// </summary>
-        protected (T Item, int Index) GetActiveItemAndIndex()
-        {
-            if (Items != null && _activeItemId is int index && index >= 0)
-            {
-                return (GetItemFromIndex(index), index);
-            }
-            else
-            {
-                return (default, -1);
-            }
+            return _items.Skip(index).FirstOrDefault();
         }
         public async Task OpenMenu()
         {
@@ -484,8 +493,7 @@ namespace MudBlazor
             // we need the popover to be visibible
             await WaitForRender();
             // Scroll the active item on each opening
-            var (item, index) = GetActiveItemAndIndex();
-            await ScrollToItemAsync(index);
+            await ScrollToItemAsync(_selectedItemIndex);
             //disable escape propagation: if selectmenu is open, only the select popover should close and underlying components should not handle escape key
             await _keyInterceptor.UpdateKey(new() { Key = "Escape", StopDown = "Key+none" });
             await OnOpen.InvokeAsync();
@@ -638,7 +646,7 @@ namespace MudBlazor
                     SetValueAsync((T)(object)Text, updateText: false).AndForget();
             }
         }
-
+        Task SelectOption(int index) => SelectOption(GetItemFromIndex(index), index);
         async Task SelectOption(T value, int index)
         {
             if (MultiSelection)
