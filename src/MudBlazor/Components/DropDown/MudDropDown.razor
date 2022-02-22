@@ -34,7 +34,7 @@
                             @if (UseVirtualization)
                             {
                                 <Virtualize ItemsProvider=@LoadItems Context="itemIndex">
-                                    <MudListItem id="@GetIdForIndex(itemIndex.Index)" OnClick=@(_=>SelectOption(itemIndex.Item, itemIndex.Index)) Icon=@CheckBoxIcon(itemIndex.Item) Dense="@Dense" Value=@itemIndex.Index>
+                                    <MudListItem id="@GetIdForIndex(itemIndex.Index)" OnClick=@(_=>ToogleOption(itemIndex.Item, itemIndex.Index)) Icon=@CheckBoxIcon(itemIndex.Index) Dense="@Dense" Value=@itemIndex.Index>
                                         @if (ChildContent != null)
                                         {
                                             @ChildContent(itemIndex.Item)
@@ -50,7 +50,7 @@
                             {
                                 foreach (var (item, index) in IndexedItems)
                                 {
-                                    <MudListItem id="@GetIdForIndex(index)" Icon=@CheckBoxIcon(item) Value=@index Dense="@Dense" OnClick=@(_=>SelectOption(item, index))>
+                                    <MudListItem id="@GetIdForIndex(index)" Icon=@CheckBoxIcon(index) Value=@index Dense="@Dense" OnClick=@(_=>ToogleOption(item, index))>
                                         @if (ChildContent != null)
                                         {
                                             @ChildContent(item)

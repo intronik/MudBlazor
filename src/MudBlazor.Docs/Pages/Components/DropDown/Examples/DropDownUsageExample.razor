@@ -2,9 +2,11 @@
 @using System.Globalization;
 @namespace MudBlazor.Docs.Examples
 
-<MudDropDown T="int" @bind-Value="_value" Items=@Values Label="Select number" HelperText="A long list" UseVirtualization=true Context="item" FullWidth=true>
+<MudDropDown T="int" @bind-Value="_value" Items=@Values Label="Select number" HelperText="A long list" UseVirtualization=true Context="item" Dense=true>
     Song number @(item==2?"Two":item.ToString())
 </MudDropDown>
+
+<MudNumericField T=int @bind-Value=@_value Label="The value" HelperText="The current value"/>
 
 @code {
     private int _value;
