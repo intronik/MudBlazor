@@ -313,10 +313,12 @@ namespace MudBlazor
         {
             try
             {
-                // The validation context is applied either on the `EditContext.Model`, or `this` as a stub subject.
-                // Complex validation with fields references (like `CompareAttribute`) should use an EditContext.
-                var validationContextSubject = EditContext?.Model ?? this;
+                // The validation context is applied either on the `EditContext.Model`, '_fieldIdentifier.Model', or `this` as a stub subject.
+                // Complex validation with fields references (like `CompareAttribute`) should use an EditContext or For when not using EditContext.
+                var validationContextSubject = EditContext?.Model ?? _fieldIdentifier.Model ?? this;
                 var validationContext = new ValidationContext(validationContextSubject);
+                if (validationContext.MemberName is null && _fieldIdentifier.FieldName is not null)
+                    validationContext.MemberName = _fieldIdentifier.FieldName;
                 var validationResult = attr.GetValidationResult(value, validationContext);
                 if (validationResult != ValidationResult.Success)
                     errors.Add(validationResult.ErrorMessage);
@@ -373,21 +375,17 @@ namespace MudBlazor
         {
             try
             {
-                if (Form==null)
+                if (Form?.Model == null)
                 {
-                    errors.Add("Form is null, unable to validate with model!");
                     return;
                 }
-                if (Form.Model == null)
-                {
-                    errors.Add("Form.Model is null, unable to validate with model!");
-                    return;
-                }
+                
                 if (For == null)
                 {
                     errors.Add($"For is null, please set parameter For on the form input component of type {GetType().Name}");
                     return;
                 }
+
                 foreach (var error in func(Form.Model, For.GetFullPathOfMember()))
                     errors.Add(error);
             }
@@ -441,6 +439,17 @@ namespace MudBlazor
         {
             try
             {
+                if (Form?.Model == null)
+                {
+                    return;
+                }
+                
+                if (For == null)
+                {
+                    errors.Add($"For is null, please set parameter For on the form input component of type {GetType().Name}");
+                    return;
+                }
+                
                 foreach (var error in await func(Form.Model, For.GetFullPathOfMember()))
                     errors.Add(error);
             }

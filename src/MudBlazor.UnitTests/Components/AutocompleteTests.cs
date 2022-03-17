@@ -102,6 +102,17 @@ namespace MudBlazor.UnitTests.Components
         }
 
         /// <summary>
+        /// Autocomplete id should propagate to label for attribute
+        /// </summary>
+        [Test]
+        public void AutocompleteLabelFor()
+        {
+            var comp = Context.RenderComponent<AutocompleteTest1>();
+            var label = comp.FindAll(".mud-input-label");
+            label[0].Attributes.GetNamedItem("for")?.Value.Should().Be("autocompleteLabelTest");
+        }
+
+        /// <summary>
         /// Autocomplete should show 'Assam' (using state.ToString())
         /// </summary>
         [Test]
@@ -131,7 +142,6 @@ namespace MudBlazor.UnitTests.Components
             autocomplete.Text.Should().Be("Alabama");
             // set a value the search won't find
             autocompletecomp.SetParam(a => a.Text, "Austria"); // not part of the U.S.
-            await comp.InvokeAsync(() => autocomplete.ToggleMenu());
             // IsOpen must be true to properly simulate a user clicking outside of the component, which is what the next ToggleMenu call below does.
             autocomplete.IsOpen.Should().BeTrue();
             // now trigger the coercion by closing the menu
@@ -748,6 +758,31 @@ namespace MudBlazor.UnitTests.Components
                 autocompletecomp.Find("input").Input("");
                 await comp.InvokeAsync(() => autocomplete.ToggleMenu());
                 comp.WaitForAssertion(() => autocomplete.IsOpen.Should().BeFalse());
+            });
+        }
+
+        [Test]
+        public async Task Autocomplete_Should_Support_Sync_Search()
+        {
+            var root = Context.RenderComponent<AutocompleteSyncTest>();
+
+            var popoverProvider = root.FindComponent<MudPopoverProvider>();
+            var autocomplete = root.FindComponent<MudAutocomplete<string>>();
+            var popover = autocomplete.FindComponent<MudPopover>();
+
+            popover.Instance.Open.Should().BeFalse("Should start as closed");
+
+            await autocomplete
+                .Find($".{AutocompleteSyncTest.AutocompleteClass}")
+                .ClickAsync(new MouseEventArgs());
+
+            popoverProvider.WaitForAssertion(() =>
+            {
+                popover.Instance.Open.Should().BeTrue("Should be open once clicked");
+
+                popoverProvider
+                    .FindComponents<MudListItem>().Count
+                    .Should().Be(AutocompleteSyncTest.Items.Length, "Should show the expected items");
             });
         }
     }
