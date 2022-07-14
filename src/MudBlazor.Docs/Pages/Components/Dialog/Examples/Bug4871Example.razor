@@ -1,0 +1,55 @@
+﻿@namespace MudBlazor.Docs.Examples
+@inject IDialogService DialogService
+<a href="https://github.com/MudBlazor/MudBlazor/issues/4871">https://github.com/MudBlazor/MudBlazor/issues/4871</a>
+
+<div class="d-flex pt-3">
+    <MudButton OnClick="OpenDialog" Variant="Variant.Filled" Color="Color.Primary">
+        Click to demonstrate bug #4871
+    </MudButton>    
+</div>
+
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-3"/> Edit rating
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>How awesome are inline dialogs?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Close (Working)</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OpenSecond" Class="px-10">Open Second (Working)</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="CloseFirstOpenSecond" Class="px-10">Close and open second (Fails)</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code { 
+    private bool visible;
+    private void OpenDialog() { 
+        visible = true; 
+    } 
+    
+    void Submit() {
+         visible = false;
+    }
+
+    private Task CloseFirstOpenSecond() {
+        Submit();
+        return OpenSecond();
+    }
+
+    private Task OpenSecond()
+    {
+        return DialogService.Show<Bug4871Example_Dialog>(title: "Hello dialog2"
+            , parameters: new DialogParameters() {
+                ["ContentText"] = "Everything works fine, when you see this text!",
+                ["ButtonText"] = "OK",
+                ["Color"] = Color.Success,
+            }
+            , options: dialogOptions
+        ).Result;
+    }
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+}

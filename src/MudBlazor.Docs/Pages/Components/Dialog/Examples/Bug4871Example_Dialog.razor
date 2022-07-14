@@ -1,0 +1,29 @@
+﻿@namespace MudBlazor.Docs.Examples
+<MudDialog>
+    <DialogContent>
+        @if (ContentText!=null) {
+            <MudText>@ContentText</MudText>
+        } else {
+            <MudAlert Severity=Severity.Error>
+                ContentText is missing!
+            </MudAlert>
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@(ButtonText??"Missing!!!")</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string ContentText { get; set; }
+
+    [Parameter] public string ButtonText { get; set; }
+
+    [Parameter] public Color Color { get; set; } = Color.Error;
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}
