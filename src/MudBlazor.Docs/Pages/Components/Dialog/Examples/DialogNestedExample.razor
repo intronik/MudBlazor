@@ -9,7 +9,12 @@
 @code {
     private void OpenDialog()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        var dialog = DialogService.Show<DialogNestedExample_Dialog>("First Level Dialog", options);
+        var dialog = DialogService.Show<DialogNestedExample_Dialog>("First Level Dialog"
+            , new DialogParameters
+                {
+                    [nameof(DialogNestedExample_Dialog.Message)] = "Sample Content Dialog 1",
+                }
+            , new DialogOptions { CloseOnEscapeKey = true }
+        );
     }
 }

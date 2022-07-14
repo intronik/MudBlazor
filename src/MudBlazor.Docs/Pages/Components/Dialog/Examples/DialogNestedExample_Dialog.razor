@@ -2,9 +2,9 @@
 
 @inject IDialogService DialogService
 
-<MudDialog>
+<MudDialog DefaultFocus="DefaultFocus.Element">
     <DialogContent>
-        Dialog Content
+        @Message
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -15,11 +15,17 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-
+    [Parameter] public string Message { get; set; }
     void Cancel() => MudDialog.Cancel();
 
     private void OpenSecondDialog()
     {
-        DialogService.Show<DialogNestedExample_Dialog2>("Second Level Dialog");
+        DialogService.Show<DialogNestedExample_Dialog2>("Second Level Dialog"
+        , new DialogParameters
+            {
+                [nameof(DialogNestedExample_Dialog2.Message)] = "Sample Content Dialog 2",
+            }
+        , new DialogOptions { CloseOnEscapeKey = true, }
+        );
     }
 }
