@@ -152,12 +152,25 @@
         <DocsPageSection>
             <SectionHeader Title="Bug4871">
                 <Description>
-                    Dialog uses the FocusTrap-Component to keep the keyboard-focus within. By default, the first element is focused With <CodeInline>DefaultFocus</CodeInline> you can change the behaviour to, for example, focus the last element.
+                    https://github.com/MudBlazor/MudBlazor/issues/4871
                 </Description>
             </SectionHeader>
             <SectionContent Codes="@(new[] {new CodeFile("Page.razor", "Bug4871Example"), new CodeFile("Dialog.razor", "Bug4871Example_Dialog")})">
                 <MudContainer>
                     <Bug4871Example />
+                </MudContainer>
+            </SectionContent>
+        </DocsPageSection>
+
+        <DocsPageSection>
+            <SectionHeader Title="Bug4761">
+                <Description>
+                    https://github.com/MudBlazor/MudBlazor/issues/4761
+                </Description>
+            </SectionHeader>
+            <SectionContent Codes="@(new[] {new CodeFile("Page.razor", "Bug4761Example"), new CodeFile("Dialog.razor", "Bug4761Example_Dialog")})">
+                <MudContainer>
+                    <Bug4761Example />
                 </MudContainer>
             </SectionContent>
         </DocsPageSection>

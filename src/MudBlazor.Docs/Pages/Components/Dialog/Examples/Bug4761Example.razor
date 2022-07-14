@@ -1,0 +1,22 @@
+﻿@namespace MudBlazor.Docs.Examples
+@inject IDialogService DialogService
+<MudText Typo=Typo.h3>Demonstration of invalid dialog closing</MudText>
+<MudText>
+    This demo demonstrates the failures, when using CloseOnEscapeKey = true
+    <br/>
+    <MudLink Href="https://github.com/MudBlazor/MudBlazor/issues/4761">https://github.com/MudBlazor/MudBlazor/issues/4761</MudLink>
+</MudText>
+<MudText Typo=Typo.h6>Instructions</MudText>
+<ol>
+    <li>Open first level by clicking button</li>
+    <li>Open second level dialog by clicking Next Level</li>
+    <li>Close the top level dialog by pressing Escape key</li>
+    <li>You will see that the second level dialog is still open, BUT the Value is null!</li>
+</ol>
+
+<MudButton OnClick="OpenDialog" Variant="Variant.Filled" Color="Color.Primary">
+    Run First Level
+</MudButton>
+@code {
+    Task OpenDialog() => Bug4761Example_Dialog.ShowNested(DialogService, level: 1);
+}
