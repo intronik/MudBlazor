@@ -101,7 +101,7 @@ namespace MudBlazor
              switch (args.Key)
             {
                 case "Escape":
-                    if (CloseOnEscapeKey)
+                    if (CloseOnEscapeKey && Parent.IsTopLevelDialog(Id))
                     {
                         Cancel();
                     }

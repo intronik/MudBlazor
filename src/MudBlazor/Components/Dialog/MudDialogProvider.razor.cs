@@ -19,13 +19,13 @@ namespace MudBlazor
         [Inject] private IDialogService DialogService { get; set; }
         [Inject] private NavigationManager NavigationManager { get; set; }
 
-        [Parameter] [Category(CategoryTypes.Dialog.Behavior)] public bool? NoHeader { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Behavior)] public bool? CloseButton { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Behavior)] public bool? DisableBackdropClick { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Behavior)] public bool? CloseOnEscapeKey { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Appearance)] public bool? FullWidth { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Appearance)] public DialogPosition? Position { get; set; }
-        [Parameter] [Category(CategoryTypes.Dialog.Appearance)] public MaxWidth? MaxWidth { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Behavior)] public bool? NoHeader { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Behavior)] public bool? CloseButton { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Behavior)] public bool? DisableBackdropClick { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Behavior)] public bool? CloseOnEscapeKey { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Appearance)] public bool? FullWidth { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Appearance)] public DialogPosition? Position { get; set; }
+        [Parameter][Category(CategoryTypes.Dialog.Appearance)] public MaxWidth? MaxWidth { get; set; }
 
         private readonly Collection<IDialogReference> _dialogs = new();
         private readonly DialogOptions _globalDialogOptions = new();
@@ -92,6 +92,32 @@ namespace MudBlazor
                 DialogService.OnDialogInstanceAdded -= AddInstance;
                 DialogService.OnDialogCloseRequested -= DismissInstance;
             }
+        }
+
+        /// <summary>
+        /// Checks if the given dialog id is the top dialog visible
+        /// </summary>
+        /// <param name="dialogId">dialog guid from IDialogReference</param>
+        /// <returns>true, the dialog is the top dialog</returns>
+        internal bool IsTopLevelDialog(Guid dialogId)
+        {
+            for (int n=_dialogs.Count-1; n>=0; n--)
+            {
+                // check, if the dialog id matches 
+                if (_dialogs[n].Id == dialogId)
+                {
+                    // yes it is the top dialog
+                    return true;
+                }
+                // it was not matching and the dialog is not completed
+                if (!_dialogs[n - 1].Result.IsCompleted)
+                {
+                    // another dialog is the top dialog
+                    return false;
+                }
+            }
+            // we did not find any matching id, or we have no visible dialogs
+            return false;
         }
     }
 }
