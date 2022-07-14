@@ -396,13 +396,13 @@ namespace MudBlazor.UnitTests.Components
             await comp.InvokeAsync(() => dialog2.MudDialog.HandleKeyDown(new KeyboardEventArgs() { Key = "Escape", Type = "keydown", }));
             comp.Markup.Trim().Should().NotBeEmpty();
         }
-        
+
         [Test]
         public async Task DialogHandlesOnBackdropClickEvent()
         {
             var comp = Context.RenderComponent<MudDialogProvider>();
             comp.Markup.Trim().Should().BeEmpty();
-            
+
             var service = Context.Services.GetService<IDialogService>() as DialogService;
             service.Should().NotBe(null);
             IDialogReference dialogReference = null;
@@ -410,10 +410,10 @@ namespace MudBlazor.UnitTests.Components
             await comp.InvokeAsync(() => dialogReference = service?.Show<DialogWithOnBackdropClickEvent>());
             dialogReference.Should().NotBe(null);
             comp.Find("div.mud-dialog-title").TrimmedText().Should().Be("Title:");
-            
+
             //Click on backdrop
             comp.Find("div.mud-overlay").Click();
-            
+
             comp.Find("div.mud-dialog-title").TrimmedText().Should().Be("Title: Backdrop clicked");
         }
 
@@ -447,6 +447,48 @@ namespace MudBlazor.UnitTests.Components
             var messageBox = comp.FindComponent<MudMessageBox>();
             messageBox.Should().NotBeNull();
             messageBox.Instance.YesText.Should().Be("BUG4871");
+        }
+
+        /// <summary>
+        /// Wrong dialog is closed, when pressing escape
+        /// https://github.com/MudBlazor/MudBlazor/issues/4761
+        /// </summary>
+        [Test]
+        public async Task Bug4761Test()
+        {
+            var service = Context.Services.GetService<IDialogService>() as DialogService;
+            service.Should().NotBe(null);
+            // 
+            var doc = Context.Render(b =>
+            {
+                b.OpenElement(1, "div");
+                b.OpenComponent<MudDialogProvider>(2);
+                b.CloseComponent();
+                b.CloseElement();
+            });
+            var div = doc.Find("div");
+            div.Should().NotBe(null);
+            var comp = doc.FindComponent<MudDialogProvider>();
+            comp.Markup.Trim().Should().BeEmpty();
+            IDialogReference dialog1 = null;
+            IDialogReference dialog2 = null;
+            const string message1 = "message1";
+            const string message2 = "message2";
+            //dialog with clickable backdrop
+            await comp.InvokeAsync(() => dialog1 = service?.Show<DialogOkCancel>(message1, new DialogOptions() { CloseOnEscapeKey = true }));
+            comp.WaitForAssertion(() => comp.FindAll(".mud-typography-h6").Should().HaveCount(1));
+            await comp.InvokeAsync(() => dialog2 = service?.Show<DialogOkCancel>(message2, new DialogOptions() { CloseOnEscapeKey = true }));
+            comp.WaitForAssertion(() => comp.FindAll(".mud-typography-h6").Should().HaveCount(2));
+            // simulate first escape key
+            div.KeyDown(Key.Escape);
+            // dialog2 should be closed 
+            comp.WaitForState(() => dialog2.Result.IsCanceled);
+            // simulate second escape key
+            div.KeyDown(Key.Escape);
+            // dialog1 should be closed 
+            comp.WaitForState(() => dialog1.Result.IsCanceled);
+            // now no dialog should be visible
+            comp.Markup.Trim().Should().BeEmpty();
         }
     }
 
